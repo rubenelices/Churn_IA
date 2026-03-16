@@ -23,7 +23,7 @@ import lightgbm as lgb
 # CONFIGURACIÓN
 # =============================================================================
 st.set_page_config(
-    page_title="Churn Predictor Pro",
+    page_title="Churn Predictor",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -64,7 +64,9 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
 
-    * { font-family: 'Audiowide', sans-serif !important; }
+    *:not([data-testid="stIconMaterial"]):not(.material-icons):not([class*="icon"]):not(svg):not(svg *) {
+        font-family: 'Audiowide', sans-serif !important;
+    }
 
     /* Tema principal */
     .main-header {
@@ -178,6 +180,52 @@ st.markdown("""
         padding: 16px;
         border-radius: 12px;
         border: 1px solid #334155;
+        transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+    .stMetric:hover {
+        border-color: #7c3aed !important;
+        box-shadow: 0 0 12px rgba(168,85,247,0.25), 0 0 30px rgba(168,85,247,0.1) !important;
+    }
+
+    /* Hover LED morado — cards, expanders, inputs, selectbox, multiselect */
+    .segment-card {
+        transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+    .segment-card:hover {
+        border-color: #7c3aed !important;
+        box-shadow: 0 0 12px rgba(168,85,247,0.25), 0 0 30px rgba(168,85,247,0.1) !important;
+    }
+
+    [data-testid="stExpander"]:hover,
+    div[data-testid="stExpander"] > details:hover {
+        border-color: #7c3aed !important;
+        box-shadow: 0 0 12px rgba(168,85,247,0.25), 0 0 30px rgba(168,85,247,0.1) !important;
+    }
+
+    div[data-testid="stSelectbox"]:hover > div:first-child,
+    div[data-testid="stMultiSelect"]:hover > div:first-child {
+        border-color: #7c3aed !important;
+        box-shadow: 0 0 10px rgba(168,85,247,0.2) !important;
+    }
+
+    div[data-testid="stTextInput"]:hover input,
+    div[data-testid="stNumberInput"]:hover input {
+        border-color: #7c3aed !important;
+        box-shadow: 0 0 10px rgba(168,85,247,0.2) !important;
+    }
+
+    /* Info / warning / error boxes */
+    div[data-testid="stAlert"]:hover {
+        box-shadow: 0 0 12px rgba(168,85,247,0.2), 0 0 28px rgba(168,85,247,0.08) !important;
+        border-color: #7c3aed !important;
+        transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* Plotly chart containers */
+    div[data-testid="stPlotlyChart"]:hover {
+        box-shadow: 0 0 16px rgba(168,85,247,0.18), 0 0 40px rgba(168,85,247,0.07) !important;
+        border-radius: 12px;
+        transition: box-shadow 0.3s ease;
     }
 
     /* Divider moderno */
@@ -330,7 +378,12 @@ def preprocesar_fresh(fresh_raw, label_encoders, train_columns):
         )
 
     fresh_aligned = fresh_feat.reindex(columns=train_columns, fill_value=0)
-    meta = fresh[['CODE', 'Customer_ID', 'Modelo', 'ZONA', 'PVP', 'Edad', 'Revisiones']].copy()
+    meta = fresh[[
+        'CODE', 'Customer_ID', 'Modelo', 'ZONA', 'PVP', 'Edad', 'Revisiones',
+        'RENTA_MEDIA_ESTIMADA', 'Kw', 'TIPO_CARROCERIA', 'Fuel',
+        'MANTENIMIENTO_GRATUITO', 'EN_GARANTIA', 'GENERO', 'FORMA_PAGO',
+        'Margen_eur_bruto', 'km_ultima_revision', 'ENCUESTA_CLIENTE_ZONA_TALLER',
+    ]].copy()
 
     return fresh_aligned, meta
 
@@ -1002,6 +1055,259 @@ elif pagina == "📈 Análisis Nuevos Clientes":
             use_container_width=True,
             height=400
         )
+
+    # =========================================================================
+    # ANÁLISIS INDIVIDUAL DE CLIENTE
+    # =========================================================================
+    st.markdown('<div class="modern-divider"></div>', unsafe_allow_html=True)
+    st.markdown("### 🔍 Análisis Individual de Cliente")
+    st.markdown('<p class="sub-header">Selecciona un cliente para ver su perfil de riesgo detallado</p>', unsafe_allow_html=True)
+
+    ids_disponibles = sorted(res['Customer_ID'].unique())
+    cliente_sel = st.selectbox("Selecciona Customer ID:", ids_disponibles, key='cliente_individual')
+
+    cliente = res[res['Customer_ID'] == cliente_sel].iloc[0]
+    prob = cliente['prob_churn']
+    riesgo = cliente['riesgo']
+
+    # Colores por segmento
+    color_map = {
+        'MUY_ALTO': ('#ef4444', '#dc2626'),
+        'ALTO':     ('#f97316', '#ea580c'),
+        'MEDIO':    ('#f59e0b', '#d97706'),
+        'BAJO':     ('#22c55e', '#16a34a'),
+        'MUY_BAJO': ('#10b981', '#059669'),
+    }
+    col_main, col_dark = color_map.get(riesgo, ('#94a3b8', '#64748b'))
+
+    st.markdown('<div class="modern-divider"></div>', unsafe_allow_html=True)
+
+    # ── 1. VELOCÍMETRO ────────────────────────────────────────────────────────
+    col_gauge, col_ficha = st.columns([1, 1])
+
+    with col_gauge:
+        st.markdown("#### Probabilidad de Churn")
+        fig_gauge = go.Figure(go.Indicator(
+            mode="gauge+number+delta",
+            value=round(prob * 100, 1),
+            delta={'reference': res['prob_churn'].mean() * 100,
+                   'increasing': {'color': '#ef4444'},
+                   'decreasing': {'color': '#10b981'},
+                   'valueformat': '.1f',
+                   'suffix': '%'},
+            number={'suffix': '%', 'font': {'size': 48, 'color': col_main}},
+            gauge={
+                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': '#94a3b8',
+                         'tickfont': {'color': '#94a3b8'}},
+                'bar': {'color': col_main, 'thickness': 0.25},
+                'bgcolor': '#1e293b',
+                'borderwidth': 0,
+                'steps': [
+                    {'range': [0, 20],  'color': '#064e3b'},
+                    {'range': [20, 40], 'color': '#065f46'},
+                    {'range': [40, 60], 'color': '#78350f'},
+                    {'range': [60, 80], 'color': '#7c2d12'},
+                    {'range': [80, 100],'color': '#450a0a'},
+                ],
+                'threshold': {
+                    'line': {'color': '#f8fafc', 'width': 3},
+                    'thickness': 0.8,
+                    'value': res['prob_churn'].mean() * 100
+                }
+            },
+            title={'text': f"Segmento: <b>{riesgo}</b>",
+                   'font': {'color': col_main, 'size': 16}}
+        ))
+        fig_gauge.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            height=300,
+            margin=dict(t=40, b=10, l=30, r=30),
+            font={'family': 'Audiowide'}
+        )
+        st.plotly_chart(fig_gauge, use_container_width=True)
+        st.caption("La línea blanca indica la media del grupo filtrado actual.")
+
+    # ── 2. FICHA RESUMEN ──────────────────────────────────────────────────────
+    with col_ficha:
+        st.markdown("#### Ficha del Cliente")
+
+        garantia_txt  = "✅ Sí" if str(cliente.get('EN_GARANTIA', '')).upper().strip() == 'SI' else "❌ No"
+        mant_txt      = "✅ Sí" if int(cliente.get('MANTENIMIENTO_GRATUITO', 0)) > 0 else "❌ No"
+        genero_txt    = "Hombre" if str(cliente.get('GENERO', '')).upper().strip() == 'M' else "Mujer"
+        forma_pago    = str(cliente.get('FORMA_PAGO', '-')).title()
+        pvp_fmt       = f"{cliente['PVP']:,.0f} €"
+        renta_fmt     = f"{cliente.get('RENTA_MEDIA_ESTIMADA', 0):,.0f} €"
+        edad          = int(cliente.get('Edad', 0))
+        kw            = int(cliente.get('Kw', 0))
+        zona          = str(cliente.get('ZONA', '-'))
+        modelo_coche  = str(cliente.get('Modelo', '-'))
+        carroceria    = str(cliente.get('TIPO_CARROCERIA', '-'))
+        combustible   = str(cliente.get('Fuel', '-'))
+
+        badge_color = col_main
+        ficha_html = f"""
+        <div style="
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid {badge_color}55;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            font-family: 'Audiowide', sans-serif;
+        ">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+                <span style="font-size:1.1rem; color:#94a3b8;">ID Cliente</span>
+                <span style="font-size:1.1rem; font-weight:700; color:#f8fafc;">{cliente_sel}</span>
+            </div>
+            <div style="height:1px; background:linear-gradient(90deg,transparent,{badge_color}55,transparent); margin-bottom:18px;"></div>
+            <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                <tr>
+                    <td style="padding:7px 4px; color:#94a3b8;">Zona</td>
+                    <td style="padding:7px 4px; color:#f8fafc; font-weight:600; text-align:right;">{zona}</td>
+                </tr>
+                <tr style="background:rgba(255,255,255,0.03);">
+                    <td style="padding:7px 4px; color:#94a3b8;">Modelo</td>
+                    <td style="padding:7px 4px; color:#f8fafc; font-weight:600; text-align:right;">{modelo_coche}</td>
+                </tr>
+                <tr>
+                    <td style="padding:7px 4px; color:#94a3b8;">Carrocería</td>
+                    <td style="padding:7px 4px; color:#f8fafc; font-weight:600; text-align:right;">{carroceria}</td>
+                </tr>
+                <tr style="background:rgba(255,255,255,0.03);">
+                    <td style="padding:7px 4px; color:#94a3b8;">Combustible</td>
+                    <td style="padding:7px 4px; color:#f8fafc; font-weight:600; text-align:right;">{combustible}</td>
+                </tr>
+                <tr>
+                    <td style="padding:7px 4px; color:#94a3b8;">PVP</td>
+                    <td style="padding:7px 4px; color:#f8fafc; font-weight:600; text-align:right;">{pvp_fmt}</td>
+                </tr>
+                <tr style="background:rgba(255,255,255,0.03);">
+                    <td style="padding:7px 4px; color:#94a3b8;">Renta estimada</td>
+                    <td style="padding:7px 4px; color:#f8fafc; font-weight:600; text-align:right;">{renta_fmt}</td>
+                </tr>
+                <tr>
+                    <td style="padding:7px 4px; color:#94a3b8;">Edad</td>
+                    <td style="padding:7px 4px; color:#f8fafc; font-weight:600; text-align:right;">{edad} años</td>
+                </tr>
+                <tr style="background:rgba(255,255,255,0.03);">
+                    <td style="padding:7px 4px; color:#94a3b8;">Potencia</td>
+                    <td style="padding:7px 4px; color:#f8fafc; font-weight:600; text-align:right;">{kw} kW</td>
+                </tr>
+                <tr>
+                    <td style="padding:7px 4px; color:#94a3b8;">Forma de pago</td>
+                    <td style="padding:7px 4px; color:#f8fafc; font-weight:600; text-align:right;">{forma_pago}</td>
+                </tr>
+                <tr style="background:rgba(255,255,255,0.03);">
+                    <td style="padding:7px 4px; color:#94a3b8;">Garantía activa</td>
+                    <td style="padding:7px 4px; font-weight:600; text-align:right;">{garantia_txt}</td>
+                </tr>
+                <tr>
+                    <td style="padding:7px 4px; color:#94a3b8;">Mantenimiento gratuito</td>
+                    <td style="padding:7px 4px; font-weight:600; text-align:right;">{mant_txt}</td>
+                </tr>
+                <tr style="background:rgba(255,255,255,0.03);">
+                    <td style="padding:7px 4px; color:#94a3b8;">Género</td>
+                    <td style="padding:7px 4px; color:#f8fafc; font-weight:600; text-align:right;">{genero_txt}</td>
+                </tr>
+            </table>
+        </div>
+        """
+        st.markdown(ficha_html, unsafe_allow_html=True)
+
+    # ── 3. SCATTER CONTEXTUAL — POSICIÓN EN EL MAPA GENERAL ──────────────────
+    st.markdown('<div class="modern-divider"></div>', unsafe_allow_html=True)
+    st.markdown("#### ¿Dónde se sitúa este cliente?")
+    st.caption("Todos los clientes del grupo filtrado en gris · El cliente seleccionado destacado en grande.")
+
+    color_scatter = {
+        'MUY_ALTO': '#ef4444',
+        'ALTO':     '#f97316',
+        'MEDIO':    '#f59e0b',
+        'BAJO':     '#22c55e',
+        'MUY_BAJO': '#10b981',
+    }
+
+    fig_scatter = go.Figure()
+
+    # Fondo: todos los demás clientes, coloreados por segmento en tono suave
+    for seg, color_seg in color_scatter.items():
+        grupo = res[res['riesgo'] == seg]
+        if len(grupo) == 0:
+            continue
+        fig_scatter.add_trace(go.Scatter(
+            x=grupo['PVP'],
+            y=grupo['prob_churn'] * 100,
+            mode='markers',
+            name=seg,
+            marker=dict(color=color_seg, opacity=0.25, size=5),
+            hovertemplate=(
+                '<b>ID:</b> %{customdata[0]}<br>'
+                '<b>PVP:</b> %{x:,.0f} €<br>'
+                '<b>Prob. churn:</b> %{y:.1f}%<br>'
+                '<b>Modelo:</b> %{customdata[1]}<br>'
+                '<b>Zona:</b> %{customdata[2]}<extra></extra>'
+            ),
+            customdata=grupo[['Customer_ID', 'Modelo', 'ZONA']].values,
+        ))
+
+    # Cliente seleccionado — punto grande destacado
+    fig_scatter.add_trace(go.Scatter(
+        x=[cliente['PVP']],
+        y=[prob * 100],
+        mode='markers+text',
+        name='Cliente seleccionado',
+        marker=dict(
+            color=col_main,
+            size=18,
+            symbol='star',
+            line=dict(color='#f8fafc', width=2),
+        ),
+        text=[f"  {cliente_sel}"],
+        textposition='middle right',
+        textfont=dict(color='#f8fafc', size=12),
+        hovertemplate=(
+            f'<b>Cliente {cliente_sel}</b><br>'
+            f'PVP: {cliente["PVP"]:,.0f} €<br>'
+            f'Prob. churn: {prob*100:.1f}%<br>'
+            f'Segmento: {riesgo}<extra></extra>'
+        ),
+    ))
+
+    # Línea horizontal: umbral 50%
+    fig_scatter.add_hline(
+        y=50, line_dash='dash', line_color='#475569', line_width=1,
+        annotation_text='Umbral 50%', annotation_font_color='#94a3b8',
+        annotation_position='bottom right'
+    )
+
+    fig_scatter.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        height=450,
+        margin=dict(t=20, b=40, l=20, r=20),
+        xaxis=dict(
+            title='PVP del vehículo (€)',
+            title_font={'color': '#94a3b8'},
+            tickfont={'color': '#94a3b8'},
+            gridcolor='#1e293b',
+            tickformat=',.0f',
+        ),
+        yaxis=dict(
+            title='Probabilidad de churn (%)',
+            title_font={'color': '#94a3b8'},
+            tickfont={'color': '#94a3b8'},
+            gridcolor='#1e293b',
+            range=[0, 105],
+        ),
+        legend=dict(
+            font=dict(color='#94a3b8', size=11),
+            bgcolor='rgba(15,23,42,0.8)',
+            bordercolor='#334155',
+            borderwidth=1,
+        ),
+        font={'family': 'Audiowide'},
+    )
+    st.plotly_chart(fig_scatter, use_container_width=True)
 
 # =============================================================================
 # =============================================================================
