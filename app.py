@@ -766,7 +766,7 @@ st.markdown("""
 
 pagina = st.sidebar.radio(
     "Navegación",
-    ["📊 Dashboard", "📈 Análisis Nuevos Clientes", "🎯 Simulador de Riesgo", "💰 Acción Comercial"],
+    ["🏠 Resumen del Proyecto", "📊 Dashboard", "📈 Análisis Nuevos Clientes", "🎯 Simulador de Riesgo", "💰 Acción Comercial"],
     index=0,
     label_visibility="collapsed"
 )
@@ -785,9 +785,241 @@ else:
     st.sidebar.markdown(f"Features: **{X.shape[1]}**")
 
 # =============================================================================
+# PÁGINA 0: RESUMEN DEL PROYECTO
+# =============================================================================
+if pagina == "🏠 Resumen del Proyecto":
+    st.markdown("""<style>
+.hero-title {
+    font-family: 'Audiowide', sans-serif;
+    font-size: 3.8rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea 0%, #a78bfa 50%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+    letter-spacing: 4px;
+    margin: 1.5rem 0 0.3rem 0;
+    line-height: 1.15;
+}
+.hero-sub {
+    font-family: 'Audiowide', sans-serif;
+    font-size: 0.85rem;
+    color: #64748b;
+    text-align: center;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 2.5rem;
+}
+.hero-divider {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #8b5cf6, #667eea, transparent);
+    margin: 0 auto 2.5rem auto;
+    width: 60%;
+    border-radius: 2px;
+}
+.pipeline-wrap {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    overflow-x: auto;
+    padding: 0.5rem 0.5rem 1.5rem 0.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(139,92,246,0.4) transparent;
+}
+.pipe-step {
+    flex: 1;
+    min-width: 155px;
+    background: linear-gradient(160deg, rgba(30,41,59,0.95) 0%, rgba(15,23,42,0.98) 100%);
+    border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 16px;
+    padding: 1.8rem 1rem 1.4rem 1rem;
+    text-align: center;
+    position: relative;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+}
+.pipe-step:hover {
+    border-color: rgba(139,92,246,0.6);
+    box-shadow: 0 0 24px rgba(139,92,246,0.18);
+    transform: translateY(-3px);
+}
+.pipe-step.active {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 28px rgba(139,92,246,0.3);
+    background: linear-gradient(160deg, rgba(139,92,246,0.12) 0%, rgba(15,23,42,0.98) 100%);
+}
+.pipe-step-num {
+    font-family: 'Audiowide', sans-serif;
+    font-size: 0.6rem;
+    color: rgba(139,92,246,0.5);
+    letter-spacing: 2px;
+    margin-bottom: 0.5rem;
+}
+.pipe-arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 0.3rem;
+    color: rgba(139,92,246,0.5);
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    padding-bottom: 1rem;
+}
+.pipe-icon { font-size: 2.4rem; margin-bottom: 0.7rem; }
+.pipe-title {
+    font-family: 'Audiowide', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #a78bfa;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+}
+.pipe-detail {
+    font-family: 'Audiowide', sans-serif;
+    font-size: 0.6rem;
+    color: #64748b;
+    line-height: 1.8;
+}
+.pipe-detail span { display: block; }
+.stat-card {
+    background: linear-gradient(160deg, rgba(30,41,59,0.95) 0%, rgba(15,23,42,0.98) 100%);
+    border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 16px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.stat-card:hover {
+    border-color: rgba(139,92,246,0.5);
+    box-shadow: 0 0 20px rgba(139,92,246,0.15);
+}
+.stat-value {
+    font-family: 'Audiowide', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 0.4rem;
+}
+.stat-label {
+    font-family: 'Audiowide', sans-serif;
+    font-size: 0.6rem;
+    color: #64748b;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+</style>
+<div class="hero-title">CHURN PREDICTOR</div>
+<div class="hero-sub">Ingeniería Matemática &nbsp;·&nbsp; Machine Learning &nbsp;·&nbsp; Churn</div>
+<div class="hero-divider"></div>
+""", unsafe_allow_html=True)
+
+    # Pipeline
+    st.markdown("""<div class="pipeline-wrap">
+<div class="pipe-step">
+<div class="pipe-step-num">01</div>
+<div class="pipe-icon">🗄️</div>
+<div class="pipe-title">Datos</div>
+<div class="pipe-detail">
+<span>customer_data</span>
+<span>nuevos_clientes</span>
+<span>costes.csv</span>
+<span>58,439 registros</span>
+</div>
+</div>
+<div class="pipe-arrow">›</div>
+<div class="pipe-step">
+<div class="pipe-step-num">02</div>
+<div class="pipe-icon">🧹</div>
+<div class="pipe-title">EDA & Limpieza</div>
+<div class="pipe-detail">
+<span>Análisis exploratorio</span>
+<span>Outliers</span>
+<span>Valores nulos</span>
+<span>Distribuciones</span>
+</div>
+</div>
+<div class="pipe-arrow">›</div>
+<div class="pipe-step">
+<div class="pipe-step-num">03</div>
+<div class="pipe-icon">⚙️</div>
+<div class="pipe-title">Features</div>
+<div class="pipe-detail">
+<span>Label Encoding</span>
+<span>Estandarización</span>
+<span>23 variables</span>
+<span>Sin leakage</span>
+</div>
+</div>
+<div class="pipe-arrow">›</div>
+<div class="pipe-step active">
+<div class="pipe-step-num">04</div>
+<div class="pipe-icon">🔧</div>
+<div class="pipe-title">Modelado</div>
+<div class="pipe-detail">
+<span>XGBoost ★</span>
+<span>Random Forest</span>
+<span>LightGBM</span>
+<span>Comparativa</span>
+</div>
+</div>
+<div class="pipe-arrow">›</div>
+<div class="pipe-step">
+<div class="pipe-step-num">05</div>
+<div class="pipe-icon">📈</div>
+<div class="pipe-title">Threshold</div>
+<div class="pipe-detail">
+<span>F-beta (β=2)</span>
+<span>Negocio-driven</span>
+<span>Minimizar FN</span>
+<span>Maximizar recall</span>
+</div>
+</div>
+<div class="pipe-arrow">›</div>
+<div class="pipe-step">
+<div class="pipe-step-num">06</div>
+<div class="pipe-icon">🎯</div>
+<div class="pipe-title">Segmentación</div>
+<div class="pipe-detail">
+<span>5 niveles riesgo</span>
+<span>10000 clientes</span>
+<span>Prob. individual</span>
+<span>Perfil CLTV</span>
+</div>
+</div>
+<div class="pipe-arrow">›</div>
+<div class="pipe-step">
+<div class="pipe-step-num">07</div>
+<div class="pipe-icon">💼</div>
+<div class="pipe-title">Acción Com.</div>
+<div class="pipe-detail">
+<span>ROI por acción</span>
+<span>Campaña óptima</span>
+<span>Coste vs CLTV</span>
+<span>Estrategia mix</span>
+</div>
+</div>
+</div>""", unsafe_allow_html=True)
+
+    # Stats
+    st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
+    col1, col2, col3, col4, col5 = st.columns(5)
+    stats = [
+        ("58,439", "#8b5cf6", "Clientes totales"),
+        ("23", "#667eea", "Features"),
+        ("3", "#a78bfa", "Modelos ML"),
+        ("10,000", "#6366f1", "Nuevos clientes"),
+        ("5", "#7c3aed", "Segmentos riesgo"),
+    ]
+    for col, (val, color, label) in zip([col1, col2, col3, col4, col5], stats):
+        with col:
+            st.markdown(f"""<div class="stat-card">
+<div class="stat-value" style="color:{color};">{val}</div>
+<div class="stat-label">{label}</div>
+</div>""", unsafe_allow_html=True)
+
+# =============================================================================
 # PÁGINA 1: DASHBOARD
 # =============================================================================
-if pagina == "📊 Dashboard":
+elif pagina == "📊 Dashboard":
     st.markdown('<p class="main-header">Dashboard de Modelos</p>', unsafe_allow_html=True)
     st.markdown('<p class="sub-header">Análisis predictivo con XGBoost, Random Forest y LightGBM</p>', unsafe_allow_html=True)
 
@@ -1313,7 +1545,7 @@ elif pagina == "📈 Análisis Nuevos Clientes":
 # =============================================================================
 # PÁGINA 3: ACCIÓN COMERCIAL (Estrategia Churn × CLTV)
 # =============================================================================
-else:
+elif pagina == "💰 Acción Comercial":
     st.markdown('<p class="main-header">Estrategia de Retención Comercial</p>', unsafe_allow_html=True)
     st.markdown('<p class="sub-header">Plan de acción personalizado por segmento de riesgo y valor del cliente (CLTV) · 10,000 nuevos clientes</p>', unsafe_allow_html=True)
 
@@ -1364,21 +1596,26 @@ else:
     # ── Estrategia 2D ──────────────────────────────────────────────────────────
     PACK = ' + Pack 5 rev. (-10%) + 1.000€ próx. vehículo'
     ESTRATEGIA_2D = {
-        ('MUY_ALTO', 'BAJO'):  (0.20,  0.00, 10.00, 0.08, 'Email + Bono 10€'),
-        ('MUY_ALTO', 'MEDIO'): (0.20,  0.00, 15.00, 0.09, 'Email + Bono 15€'),
-        ('MUY_ALTO', 'ALTO'):  (0.20, 15.00, 25.00, 0.12, 'Email + Lavado + Bono 25€'),
-        ('ALTO',     'BAJO'):  (0.20,  0.00, 10.00, 0.40, 'Email + Bono 10€'),
-        ('ALTO',     'MEDIO'): (0.10, 15.00, 45.00, 0.80, 'Email + Lavado + Bono 45€'),
-        ('ALTO',     'ALTO'):  (0.10, 65.00, 55.00, 0.85, 'Email + Pack (Lav+Neum) + Bono 55€'),
-        ('MEDIO',    'BAJO'):  (0.20,  0.00,  8.00, 0.25, 'Email + Bono 8€'),
-        ('MEDIO',    'MEDIO'): (0.50, 30.00, 25.00, 0.55, 'SMS + Lavado + Bono 25€'),
-        ('MEDIO',    'ALTO'):  (0.50, 36.00, 35.00, 0.60, 'SMS + Regalo + Lavado + Bono 35€'),
-        ('BAJO',     'BAJO'):  (0.20,  0.00,  0.00, 0.10, 'Email recordatorio' + PACK),
-        ('BAJO',     'MEDIO'): (0.50,  0.00, 10.00, 0.45, 'SMS + Bono 10€' + PACK),
-        ('BAJO',     'ALTO'):  (0.50,  0.00, 25.00, 0.50, 'SMS + Bono 25€' + PACK),
-        ('MUY_BAJO', 'BAJO'):  (0.20,  0.00,  0.00, 0.05, 'Email recordatorio' + PACK),
-        ('MUY_BAJO', 'MEDIO'): (0.20,  0.00, 10.00, 0.40, 'Email + Bono 10€' + PACK),
-        ('MUY_BAJO', 'ALTO'):  (0.20,  0.00, 15.00, 0.45, 'Email + Bono 15€' + PACK),
+        # MUY_ALTO: churn >80%, inversión mínima
+        ('MUY_ALTO', 'BAJO'):  (0.05,  0.00,  5.00, 0.13, 'Email + Bono 5€'),
+        ('MUY_ALTO', 'MEDIO'): (0.05,  0.00,  5.00, 0.13, 'Email + Bono 5€'),
+        ('MUY_ALTO', 'ALTO'):  (0.05,  0.00,  5.00, 0.13, 'Email + Bono 5€'),
+        # ALTO: churn 60-80%, acción moderada sin lavado
+        ('ALTO',     'BAJO'):  (0.10,  0.00,  5.00, 0.30, 'SMS + Bono 5€'),
+        ('ALTO',     'MEDIO'): (0.10,  6.00, 25.00, 0.60, 'SMS + Regalo + Bono 25€'),
+        ('ALTO',     'ALTO'):  (0.10,  6.00, 35.00, 0.65, 'SMS + Regalo + Bono 35€'),
+        # MEDIO: churn 40-60%, estrategia premium vía llamada
+        ('MEDIO',    'BAJO'):  (0.40,  0.00, 10.00, 0.35, 'Llamada + Bono 10€'),
+        ('MEDIO',    'MEDIO'): (0.40, 15.00, 45.00, 0.65, 'Llamada + Lavado + Bono 45€'),
+        ('MEDIO',    'ALTO'):  (0.40, 65.00, 55.00, 0.70, 'Llamada + Pack (Lav+Neum) + Bono 55€'),
+        # BAJO: churn 20-40%, fidelización
+        ('BAJO',     'BAJO'):  (0.06,  0.00,  0.00, 0.15, 'Email recordatorio revision' + PACK),
+        ('BAJO',     'MEDIO'): (0.10,  0.00, 10.00, 0.50, 'SMS + Bono 10€' + PACK),
+        ('BAJO',     'ALTO'):  (0.10,  0.00, 10.00, 0.55, 'SMS + Bono 10€' + PACK),
+        # MUY_BAJO: churn <20%, retención garantizada
+        ('MUY_BAJO', 'BAJO'):  (0.05,  0.00,  0.00, 0.10, 'Email recordatorio revision' + PACK),
+        ('MUY_BAJO', 'MEDIO'): (0.05,  0.00,  0.00, 0.45, 'Email' + PACK),
+        ('MUY_BAJO', 'ALTO'):  (0.05,  0.00,  0.00, 0.50, 'Email' + PACK),
     }
 
     res2d = clientes.apply(
