@@ -24,6 +24,7 @@ Aplicación de predicción de churn (abandono de clientes) desarrollada con Mach
 ├── app.py                          # Aplicación principal Streamlit
 ├── requirements.txt                # Dependencias
 ├── Prediccion_churn.ipynb          # Notebook con el desarrollo del modelo
+├── Accion_Comercial.ipynb          #Notebook con la estrategia comercial y el calculo del ROI
 ├── Data/
 │   ├── DataLake/                   # Datos originales en crudo
 │   ├── Datawarehouse/              # Datos procesados y dimensiones
